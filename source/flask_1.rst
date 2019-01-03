@@ -27,3 +27,13 @@ Flask快速入门
 --------------
 
 激活虚拟环境，然后执行 ``pip install flask`` 安装Flask
+
+3. WSGI
+-------------
+    --------- （Web Server Gateway Interface，Web服务器网关接口）
+    
+在Flask里面是利用 `Werkzeug <http://werkzeug.pocoo.org/>`_ 工具集实现该功能的，它也是Flask的核心，在安装Flask时会自动安装此工具集，另外一个核心工具集是 `Jinja2 <http://jinja.pocoo.org/>`_ ，它是模板引擎。
+
+WSGI指Python Web Server Gateway Interface，它是为了让Web服务器与Python程序能够进行 **数据交流** 而定义的一套接口标准/规范。如果不统一标准，那么众多的 Python Web框架都可能仅被某些Web服务器支持；而Web服务器也没法支持所有的Python Web框架。
+
+f 
