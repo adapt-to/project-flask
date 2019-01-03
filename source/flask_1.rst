@@ -99,15 +99,18 @@ Flaks简单示例 ::
 
     # 实例化flask对象
     app = Flask(__name__)
-
+    
+    # 下面语句的含义是将 "/" 和 函数 index 的对应关系添加到路由表中
     @app.route('/') # 这里执行了两步：1. value = app.route('/') 2. value(index)
     def index():
         return 'Hello World!'
     
     if __name__ == '__main__':
+        # 监听用户请求，如果有请求到来则执行app的__call__方法，这也是整个请求的入口
+        # 表示在__call__方法中对请求数据进行封装并且把请求相关的东西用来做路由映射，执行视图函数，最后把视图函数返回的内容让用户看到
         app.run() # 在新版本的Flask中，建议使用flask run命令行代码来替代此写法
 
-Flask中app部分源码 :: 
+Flask中初始化app实例的部分源码 :: 
     
     def __init__(
             self,
@@ -122,3 +125,79 @@ Flask中app部分源码 ::
             instance_relative_config=False, # 将instance_relative_config设为True，这是告诉Flask我们的配置文件路径是相对于实例文件夹的（默认是相对于程序实例根目录的）
             root_path=None # root路径
         ):
+        ...省略
+
+Flask中执行app.run()对应的源码操作 ::
+
+    def run(self, host=None, port=None, debug=None,
+            load_dotenv=True, **options):
+
+        if os.environ.get('FLASK_RUN_FROM_CLI') == 'true':
+            from .debughelpers import explain_ignored_app_run
+            explain_ignored_app_run()
+            return
+
+        if get_load_dotenv(load_dotenv):
+            cli.load_dotenv()
+
+            # if set, let env vars override previous values
+            if 'FLASK_ENV' in os.environ:
+                self.env = get_env()
+                self.debug = get_debug_flag()
+            elif 'FLASK_DEBUG' in os.environ:
+                self.debug = get_debug_flag()
+
+        if debug is not None:
+            self.debug = bool(debug)
+
+        _host = '127.0.0.1'
+        _port = 5000 # 默认监听5000端口
+        server_name = self.config.get('SERVER_NAME')
+        sn_host, sn_port = None, None
+
+        if server_name:
+            sn_host, _, sn_port = server_name.partition(':')
+
+        host = host or sn_host or _host
+        port = int(port or sn_port or _port)
+
+        options.setdefault('use_reloader', self.debug) # 自动重启
+        options.setdefault('use_debugger', self.debug) # debug模式
+        options.setdefault('threaded', True)
+
+        cli.show_server_banner(self.env, self.debug, self.name, False)
+
+        from werkzeug.serving import run_simple  # 这一句是核心，web的本质就在这里
+
+        try:
+            run_simple(host, port, self, **options) # 这里的self就是指代前面的flask的实例对象app
+            # 由于对象后面加括号，触发执行。构造方法的执行是由类创建对象触发的，即：对象 = 类名() ；而对于 __call__ 方法的执行是由对象后加括号触发的，即：对象() 或者 类()()
+            # 上面的例子中的run_simple('localhost', 4000, hello)中是执行hello(),而这里变成了对象app，所以app()执行其__call__方法
+        finally:
+            self._got_first_request = False
+
+__call__方法源码 ::
+
+    def __call__(self, environ, start_response):
+        return self.wsgi_app(environ, start_response) # 在这里面又执行自身的wsgi_app方法
+
+wsgi_app方法源码（这个方法也就是所有请求的入口） ::
+
+    def wsgi_app(self, environ, start_response):
+        ctx = self.request_context(environ)
+        error = None
+        try:
+            try:
+                ctx.push()
+                response = self.full_dispatch_request()
+            except Exception as e:
+                error = e
+                response = self.handle_exception(e)
+            except:
+                error = sys.exc_info()[1]
+                raise
+            return response(environ, start_response)
+        finally:
+            if self.should_ignore_error(error):
+                error = None
+            ctx.auto_pop(error)
