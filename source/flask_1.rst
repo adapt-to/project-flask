@@ -36,4 +36,14 @@ Flask快速入门
 
 WSGI指Python Web Server Gateway Interface，它是为了让Web服务器与Python程序能够进行 **数据交流** 而定义的一套接口标准/规范。如果不统一标准，那么众多的 Python Web框架都可能仅被某些Web服务器支持；而Web服务器也没法支持所有的Python Web框架。
 
-f 
+.. code-block:: c
+  :linenos:
+    from werkzeug.wrappers import Request, Response
+
+    @Request.application
+    def hello(request):
+        return Response('Hello World!')
+
+    if __name__ == '__main__':
+        from werkzeug.serving import run_simple
+        run_simple('localhost', 4000, hello)
