@@ -88,4 +88,37 @@ socket示例 ::
     if __name__ == '__main__':
         main()
 
-所以说，python_web框架本质的本质都是利用socket来实现的，
+所以说，python_web框架本质的本质都是利用socket来实现的。
+
+4、Flask
+-------------
+
+Flaks简单示例 ::
+
+    from flask import Flask
+
+    # 实例化flask对象
+    app = Flask(__name__)
+
+    @app.route('/') # 这里执行了两步：1. value = app.route('/') 2. value(index)
+    def index():
+        return 'Hello World!'
+    
+    if __name__ == '__main__':
+        app.run() # 在新版本的Flask中，建议使用flask run命令行代码来替代此写法
+
+Flask中app部分源码 :: 
+    
+    def __init__(
+            self,
+            import_name, # 实例名称. 上面的例子中app名为 ``__name__`` ，即文件名
+            static_url_path=None, # 静态文件路径
+            static_folder='static', # 静态文件文件夹名
+            static_host=None,
+            host_matching=False,
+            subdomain_matching=False,
+            template_folder='templates', # 模板文件文件夹名
+            instance_path=None, # 示例路径
+            instance_relative_config=False, # 将instance_relative_config设为True，这是告诉Flask我们的配置文件路径是相对于实例文件夹的（默认是相对于程序实例根目录的）
+            root_path=None # root路径
+        ):
