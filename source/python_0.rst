@@ -13,4 +13,3 @@ Python最初是由Guido van Rossum在1989年圣诞节期间编写的。由于Pyt
 我们可以从以下榜单看出些许眉目（榜单来源：2018年10月编程语言排行榜）
 
 .. image:: ./rank.png
-   :width: 100px
